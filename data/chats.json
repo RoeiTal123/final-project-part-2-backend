@@ -1,0 +1,14 @@
+[
+  {
+    "_id": "1",
+    "chatName": "Tuxedo Owners",
+    "chatLogo": "",
+    "chatters": ["1", "3"],
+    "messages": [
+      { "_id": "1", "text": "hey" },
+      { "_id": "3", "text": "hey" },
+      { "_id": "1", "text": "how are you doing?" }
+    ],
+    "createdAt": 1767564832000
+  }
+]
