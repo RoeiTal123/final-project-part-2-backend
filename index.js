@@ -1,8 +1,8 @@
+const cors = require("cors");
 const express = require("express")
 const app = express()
 const fs = require("fs")
 const path = require("path")
-const cors = require("cors");
 require("dotenv").config();
 
 const { postRouter } = require("./data management/router/post-router.js")

@@ -6,9 +6,11 @@ exports.postController = {
         const connection = await dbConnection.createConnection()
 
         const filter = req.query.sort
-        console.log("filter"+filter)
-        let orderBy = "p.created_at DESC"
-        let timeCondition = ""
+        console.log("filter =", req.query.sort);
+
+        let whereClause = "";
+        let orderBy = "p.created_at DESC";
+
         switch (filter) {
             case "old":
                 orderBy = "p.created_at ASC";
@@ -19,35 +21,31 @@ exports.postController = {
                 break;
 
             case "day":
-                timeCondition = "WHERE p.created_at >= NOW() - INTERVAL 1 DAY";
+                whereClause = "WHERE p.created_at >= NOW() - INTERVAL 1 DAY";
                 break;
 
             case "week":
-                timeCondition = "WHERE p.created_at >= NOW() - INTERVAL 7 DAY";
+                whereClause = "WHERE p.created_at >= NOW() - INTERVAL 7 DAY";
                 break;
 
             case "month":
-                timeCondition = "WHERE p.created_at >= NOW() - INTERVAL 1 MONTH";
+                whereClause = "WHERE p.created_at >= NOW() - INTERVAL 1 MONTH";
                 break;
-
-            default:
-                orderBy = "p.created_at DESC";
         }
 
         try {
-            const [rows] = await connection.execute(`
-                                            SELECT 
-                                            p.*,
-                                            IFNULL(COUNT(pl.user_id), 0) AS like_count,
-                                            IFNULL(JSON_ARRAYAGG(pl.user_id), JSON_ARRAY()) AS likedByUsers
-                                            FROM posts p
-                                            LEFT JOIN post_likes pl 
-                                            ON p.id = pl.post_id
-                                            ${timeCondition}
-                                            GROUP BY p.id
-                                            ORDER BY ${orderBy}
-                                            `)
-            res.json(rows)
+            const [posts] = await connection.execute(`
+            SELECT 
+            p.*,
+            IFNULL(JSON_ARRAYAGG(pl.user_id), JSON_ARRAY()) AS likedByUsers
+            FROM posts p
+            LEFT JOIN post_likes pl 
+            ON p.id = pl.post_id
+            ${whereClause}
+            GROUP BY p.id
+            ORDER BY ${orderBy}
+            `);
+            res.json(posts)
         }
         catch (err) {
             console.error(err)
@@ -63,12 +61,9 @@ exports.postController = {
         const connection = await dbConnection.createConnection()
 
         try {
-            const [rows] = await connection.execute(`
+            const [posts] = await connection.execute(`
             SELECT 
-                p.*, IFNULL(
-                            JSON_ARRAYAGG(pl.user_id),
-                            JSON_ARRAY()
-                           ) AS likedByUsers
+                p.*, IFNULL(JSON_ARRAYAGG(pl.user_id),JSON_ARRAY()) AS likedByUsers
             FROM posts p
             LEFT JOIN post_likes pl 
                 ON p.id = pl.post_id
@@ -76,7 +71,7 @@ exports.postController = {
             GROUP BY p.id
         `, [postid])
 
-            res.json(rows[0])
+            res.json(posts[0])
         }
         catch (err) {
             console.error(err)
@@ -90,7 +85,10 @@ exports.postController = {
         const dbConnection = require("../../db_connection")
         const connection = await dbConnection.createConnection()
 
-        const { _userid, title, description,
+        console.log("PUT /posts HIT");
+        console.log(req.body);
+
+        const { user_id, title, description,
             mediaType, mediaUrl, createdAt } = req.body
 
         const created_at = new Date(Number(createdAt))
@@ -99,7 +97,7 @@ exports.postController = {
             const [result] = await connection.execute(
                 `INSERT INTO posts (user_id, title, description, media_type, media_url, created_at)
                  VALUES ( ?, ?, ?, ?, ?,  ?)`,
-                [_userid, title, description,
+                [user_id, title, description,
                     mediaType, mediaUrl, created_at])
 
             res.status(201).json({
@@ -120,9 +118,46 @@ exports.postController = {
         }
     },
     async updatePost(req, res) {
-
+        const dbConnection = require("../../db_connection")
+        const connection = await dbConnection.createConnection()
     },
     async deletePost(req, res) {
+        const dbConnection = require("../../db_connection")
+        const connection = await dbConnection.createConnection()
 
+        console.log("DELETE /posts HIT");
+        console.log("PARAMS:", req.params);
+
+        const { postid } = req.params;
+
+        try {
+            const [result] = await connection.execute(
+                "DELETE FROM posts WHERE id = ?",
+                [postid]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Post not found"
+                });
+            }
+
+            res.json({
+                success: true,
+                deletedId: postid
+            });
+        }
+        catch (err) {
+            console.error(err);
+
+            res.status(500).json({
+                success: false,
+                error: err.message
+            });
+        }
+        finally {
+            connection.end();
+        }
     }
 }

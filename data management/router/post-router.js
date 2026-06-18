@@ -7,6 +7,6 @@ postRouter.get('/', postController.getPosts)
 postRouter.get('/:postid', postController.getPost)
 postRouter.put('/', postController.addPost)
 postRouter.post('/:postid', postController.updatePost)
-postRouter.delete('/', postController.deletePost)
+postRouter.delete('/:postid', postController.deletePost)
 
 module.exports = { postRouter }
