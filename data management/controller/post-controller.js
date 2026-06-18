@@ -11,10 +11,11 @@ exports.postController = {
         res.json(posts);
     },
     async getPost(req,res){
+        const postid  = req.params.postid
         const dbConnection = require("../../db_connection")
         const connection = await dbConnection.createConnection()
 
-        const [row] = await connection.execute("SELECT * FROM posts WHERE id = 1")
+        const [row] = await connection.execute(`SELECT * FROM posts WHERE id = ${postid}`)
 
         connection.end();
         res.json(row[0]);
