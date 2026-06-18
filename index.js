@@ -3,6 +3,7 @@ const app = express()
 const fs = require("fs")
 const path = require("path")
 const cors = require("cors");
+require("dotenv").config();
 
 const { postRouter } = require("./data management/router/post-router.js")
 
@@ -13,7 +14,7 @@ app.use(cors({
     credentials: true
 }));
 
-app.use("/posts", postRouter)
+app.use("/api/posts", postRouter)
 
 app.get("/",(req,res)=>{
     res.send(JSON.stringify(req.query))
