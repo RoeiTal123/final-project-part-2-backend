@@ -6,7 +6,7 @@ const postRouter = new Router()
 postRouter.get('/', postController.getPosts)
 postRouter.get('/:postid', postController.getPost)
 postRouter.put('/', postController.addPost)
-postRouter.post('/', postController.addPost)
+postRouter.post('/:postid', postController.updatePost)
 postRouter.delete('/', postController.deletePost)
 
 module.exports = { postRouter }
