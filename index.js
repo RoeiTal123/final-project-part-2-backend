@@ -4,12 +4,16 @@ const fs = require("fs")
 const path = require("path")
 const cors = require("cors");
 
+const { postRouter } = require("./data management/router/post-router.js")
+
 app.use(express.json())
 
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true
 }));
+
+app.use("/posts", postRouter)
 
 app.get("/",(req,res)=>{
     res.send(JSON.stringify(req.query))
