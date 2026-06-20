@@ -120,6 +120,43 @@ exports.postController = {
     async updatePost(req, res) {
         const dbConnection = require("../../db_connection")
         const connection = await dbConnection.createConnection()
+
+        console.log("PUT /posts HIT");
+        console.log(req.body);
+
+        const {
+            id,
+            user_id,
+            title,
+            description,
+            media_type,
+            media_url,
+            created_at
+        } = req.body;
+        try {
+            const [result] = await connection.execute(
+                `UPDATE posts
+                SET title = ?, description = ?, media_type = ?, media_url = ?
+                WHERE id = ?`,
+                [title, description, media_type, media_url, id]
+            );
+
+            res.status(201).json({
+                success: true,
+                postid: result.insertId
+            })
+        }
+        catch (err) {
+            console.error(err)
+
+            res.status(500).json({
+                success: false,
+                error: err.message
+            })
+        }
+        finally {
+            connection.end()
+        }
     },
     async deletePost(req, res) {
         const dbConnection = require("../../db_connection")
