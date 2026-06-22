@@ -7,6 +7,7 @@ require("dotenv").config();
 
 const { postRouter } = require("./data management/router/post-router.js")
 const { userRouter } = require("./data management/router/user-router.js")
+const { locationRouter } = require("./data management/router/location-router.js")
 
 app.use(express.json())
 
@@ -17,6 +18,7 @@ app.use(cors({
 
 app.use("/api/posts", postRouter)
 app.use("/api/users", userRouter)
+app.use("/api/locations", locationRouter)
 
 app.listen(3000,() => {
     console.log("server running on 3000")
