@@ -5,7 +5,7 @@
     "title": "bread",
     "description": "bread",
     "mediaType": "image",
-    "mediaUrl": "../design/images/cat images/DSC_6795.avif",
+    "mediaUrl": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123420/DSC_6795_yylonb.avif",
     "likedByUsers": ["2"],
     "createdAt": 1767564832000
   },
@@ -25,7 +25,7 @@
     "title": "Orange cat sleeping",
     "description": "Caught him sleeping upside down again.",
     "mediaType": "image",
-    "mediaUrl": "../design/images/cat images/DSC_6822.jpg",
+    "mediaUrl": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123425/DSC_6822_u45cvq.jpg",
     "likedByUsers": [],
     "createdAt": 1773928849000
   },
@@ -35,7 +35,7 @@
     "title": "Tiny kitten attack",
     "description": "She keeps attacking my shoelaces.",
     "mediaType": "video",
-    "mediaUrl": "../design/videos/cat-video.mp4",
+    "mediaUrl": "https://res.cloudinary.com/dukionlns/video/upload/q_auto/f_auto/v1782123598/cat-video_j8vjkt.mp4",
     "likedByUsers": [2],
     "createdAt": 1772681104000
   },
@@ -55,7 +55,7 @@
     "title": "Window watcher",
     "description": "He sat here for 2 hours watching birds.",
     "mediaType": "image",
-    "mediaUrl": "../design/images/cat images/Sphynx_cat.jpg",
+    "mediaUrl": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123432/Sphynx_cat_mt4o96.jpg",
     "likedByUsers": [3, 4],
     "createdAt": 1771456721000
   },
@@ -75,7 +75,7 @@
     "title": "Zoomies compilation",
     "description": "Recorded the evening chaos.",
     "mediaType": "video",
-    "mediaUrl": "../design/videos/zoomies.mp4",
+    "mediaUrl": "https://res.cloudinary.com/dukionlns/video/upload/q_auto/f_auto/v1782123601/zoomies_aglpkk.mp4",
     "likedByUsers": [4, 1, 2, 3],
     "createdAt": 1776419923000
   },
@@ -85,7 +85,7 @@
     "title": "Loaf mode activated",
     "description": "Perfect loaf formation achieved.",
     "mediaType": "image",
-    "mediaUrl": "../design/images/cat images/Russian_blue_cat.webp",
+    "mediaUrl": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123431/Russian_blue_cat_uhpp91.webp",
     "likedByUsers": [1, 2],
     "createdAt": 1777654108000
   },
