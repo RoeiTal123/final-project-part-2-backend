@@ -1,4 +1,5 @@
 const { dbConnection } = require("../../db_connection")
+const cloudinary = require("../../cloudinary");
 
 exports.postController = {
     async getPosts(req, res) {
@@ -223,65 +224,19 @@ exports.postController = {
         const db = require("../../db_connection");
 
         console.log("DELETE /posts HIT");
-        console.log("PARAMS:", req.params);
 
         const { postid } = req.params;
 
         try {
-            const result = await db.query(
-                "DELETE FROM posts WHERE id = $1",
+            const posts = await db.query(
+                "SELECT media_url FROM posts WHERE id = $1",
                 [postid]
             );
 
-            if (result.affectedRows === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Post not found"
-                });
-            }
+            const post = posts.rows[0]
 
-            res.json({
-                success: true,
-                deletedId: postid
-            });
-        }
-        catch (err) {
-            console.error(err);
+            const mediaUrl = post.mediaUrl || post.media_url;
 
-            res.status(500).json({
-                success: false,
-                error: err.message
-            });
-        }
-        finally {
-
-        }
-    }, 
-    async deletePostOrMedia(req, res) {
-        const db = require("../../db_connection");
-        const cloudinary = require("cloudinary").v2;
-
-        const { id } = req.params;
-        const mode = req.query.mode || "post";
-        // default = full delete
-
-        try {
-            // 1. get post
-            const result = await db.query(
-                `SELECT media_url FROM posts WHERE id = $1`,
-                [id]
-            );
-
-            if (result.rows.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Post not found"
-                });
-            }
-
-            const mediaUrl = result.rows[0].media_url;
-
-            // helper: extract public_id
             const extractPublicId = (url) => {
                 if (!url) return null;
 
@@ -295,53 +250,83 @@ exports.postController = {
 
             const publicId = extractPublicId(mediaUrl);
 
-            // 2. always try deleting from Cloudinary first
-            if (publicId) {
+            const getResourceType = (url) => {
+                if (!url) return null;
+                if (url.includes("/video/")) return "video";
+                return "image";
+            };
+
+            const resourceType = getResourceType(mediaUrl);
+
+            // delete media first
+            if (publicId && resourceType) {
                 await cloudinary.uploader.destroy(publicId, {
-                    resource_type: "auto"
+                    resource_type: resourceType
                 });
             }
 
-            // =========================
-            // MODE 1: only media delete
-            // =========================
-            if (mode === "media") {
-                await db.query(
-                    `UPDATE posts
-                 SET media_url = NULL,
-                     media_type = NULL
-                 WHERE id = $1`,
-                    [id]
-                );
-
-                return res.status(200).json({
-                    success: true,
-                    deletedMedia: true,
-                    deletedPost: false
-                });
-            }
-
-            // =========================
-            // MODE 2: full post delete
-            // =========================
+            // then delete post
             await db.query(
-                `DELETE FROM posts WHERE id = $1`,
-                [id]
+                "DELETE FROM posts WHERE id = $1",
+                [postid]
             );
 
-            return res.status(200).json({
+            return res.json({
                 success: true,
-                deletedMedia: true,
-                deletedPost: true
+                deletedPost: true,
+                deletedMedia: !!publicId
             });
 
         } catch (err) {
-            console.error("Delete error:", err);
+            console.error(err);
 
             return res.status(500).json({
                 success: false,
-                message: err.message
+                error: err.message
             });
+        }
+    },
+    async addLike(req, res) {
+        const db = require("../../db_connection");
+        const { postid } = req.params;
+        const { userId } = req.body;
+
+        await db.query(
+            `DELETE FROM post_likes WHERE post_id = $1`,
+            [postid]
+        );
+
+        try {
+            // prevent duplicates (important!)
+            await db.query(
+                `INSERT INTO post_likes (post_id, user_id)
+             VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+                [postid, userId]
+            );
+
+            res.json({ success: true });
+        } catch (err) {
+            console.log("addLike error:", err);
+            res.status(500).json({ success: false });
+        }
+    },
+    async removeLike(req, res) {
+        const db = require("../../db_connection");
+        const { postid } = req.params;
+        const { userId } = req.body;
+
+        try {
+            await db.query(
+                `DELETE FROM post_likes
+             WHERE post_id = $1 AND user_id = $2`,
+                [postid, userId]
+            );
+
+            res.json({ success: true });
+        } catch (err) {
+            console.log("removeLike error:", err);
+            res.status(500).json({ success: false });
         }
     }
 }

@@ -4,10 +4,19 @@ const app = express()
 const fs = require("fs")
 const path = require("path")
 require("dotenv").config();
+const cloudinary = require("./cloudinary.js");
 
 const { postRouter } = require("./data management/router/post-router.js")
 const { userRouter } = require("./data management/router/user-router.js")
 const { locationRouter } = require("./data management/router/location-router.js")
+
+process.on("uncaughtException", (err) => {
+    console.error("🔥 UNCAUGHT:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+    console.error("🔥 UNHANDLED:", err);
+});
 
 app.use(express.json())
 
