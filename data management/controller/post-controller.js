@@ -256,7 +256,8 @@ exports.postController = {
         finally {
 
         }
-    }, async eletePostOrMedia(req, res) {
+    }, 
+    async deletePostOrMedia(req, res) {
         const db = require("../../db_connection");
         const cloudinary = require("cloudinary").v2;
 
