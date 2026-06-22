@@ -53,7 +53,7 @@ exports.postController = {
             res.status(500).json({ error: err.message })
         }
         finally {
-            
+
         }
     },
     async getPost(req, res) {
@@ -63,22 +63,23 @@ exports.postController = {
         try {
             const posts = await db.query(`
             SELECT 
-                p.*, IFNULL(JSON_ARRAYAGG(pl.user_id),JSON_ARRAY()) AS likedByUsers
+            p.*,
+            COALESCE(
+           json_agg(pl.user_id) FILTER (WHERE pl.user_id IS NOT NULL),
+           '[]'::json
+           ) AS likedByUsers
             FROM posts p
             LEFT JOIN post_likes pl 
-                ON p.id = pl.post_id
-            WHERE p.id = ?
-            GROUP BY p.id
+            ON p.id = pl.post_id
+            WHERE p.id = $1
+            GROUP BY p.id;
         `, [postid])
-
-            res.json(posts[0])
+            const post = posts.rows[0];
+            res.json(post)
         }
         catch (err) {
             console.error(err)
             res.status(500).json({ error: err.message })
-        }
-        finally {
-            connection.end()
         }
     },
     async addPost(req, res) {
@@ -150,7 +151,7 @@ exports.postController = {
             })
         }
         finally {
-            
+
         }
     },
     async deletePost(req, res) {
@@ -163,7 +164,7 @@ exports.postController = {
 
         try {
             const result = await db.query(
-                "DELETE FROM posts WHERE id = ?",
+                "DELETE FROM posts WHERE id = $1",
                 [postid]
             );
 
@@ -188,7 +189,7 @@ exports.postController = {
             });
         }
         finally {
-            
+
         }
     }
 }
