@@ -6,7 +6,6 @@ exports.postController = {
         const db = require("../../db_connection");
 
         const filter = req.query.sort
-        console.log("filter =", req.query.sort);
 
         let whereClause = "";
         let orderBy = "p.created_at DESC";
@@ -85,9 +84,6 @@ exports.postController = {
     },
     async addPost(req, res) {
         const db = require("../../db_connection");
-
-        console.log("PUT /posts HIT");
-        console.log(req.body);
 
         const { user_id, title, description,
             mediaType, mediaUrl, createdAt } = req.body
@@ -222,8 +218,6 @@ exports.postController = {
     },
     async deletePost(req, res) {
         const db = require("../../db_connection");
-
-        console.log("DELETE /posts HIT");
 
         const { postid } = req.params;
 

@@ -26,8 +26,6 @@ exports.userController = {
   },
 
   async addUser(req, res) {
-    console.log("POST /api/users HIT");
-    console.log("Body payload:", req.body);
 
     const { username, password, fullname, email, profile_pic_url, user_type } = req.body;
 
@@ -65,7 +63,6 @@ exports.userController = {
   },
 
     async login(req, res) {
-    console.log("POST /api/users/login HIT");
     const { username, password } = req.body;
 
     try {
