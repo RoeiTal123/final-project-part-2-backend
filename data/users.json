@@ -7,8 +7,8 @@
     "mail": "moshe@dat.com",
     "createdAt": 1778841205000,
     "birthday": 1021669200000,
-    "profilePicURL": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123440/man_1_ikeoad.avif",
-    "userType": "feeder",
+    "profile_pic_url": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123440/man_1_ikeoad.avif",
+    "user_type": "feeder",
     "feedingStations": [
       { "_id": 1, "status": "owner" }
     ],
@@ -22,8 +22,8 @@
     "mail": "reb@becca.com",
     "createdAt": 1778841205000,
     "birthday": 1021669200000,
-    "profilePicURL": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123444/woman_1_tsdhcn.avif",
-    "userType": "user",
+    "profile_pic_url": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123444/woman_1_tsdhcn.avif",
+    "user_type": "user",
     "feedingStations": [],
     "posts": ["2", "5", "8"]
   },
@@ -35,8 +35,8 @@
     "mail": "princess@cess.com",
     "createdAt": 1778841205000,
     "birthday": 1021669200000,
-    "profilePicURL": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123489/woman_2_afdtvh.jpg",
-    "userType": "moderator",
+    "profile_pic_url": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123489/woman_2_afdtvh.jpg",
+    "user_type": "moderator",
     "feedingStations": [],
     "posts": ["3", "6", "9"]
   },
@@ -48,8 +48,8 @@
     "mail": "roberto_gonzales@b.com",
     "createdAt": 1778841205000,
     "birthday": 1021669200000,
-    "profilePicURL": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123442/man_2_jd27v2.jpg",
-    "userType": "feeder",
+    "profile_pic_url": "https://res.cloudinary.com/dukionlns/image/upload/q_auto/f_auto/v1782123442/man_2_jd27v2.jpg",
+    "user_type": "feeder",
     "feedingStations": [
       { "_id": 1, "status": "owner" }
     ],
