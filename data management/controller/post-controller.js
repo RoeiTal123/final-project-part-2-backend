@@ -61,7 +61,7 @@ exports.postController = {
         const db = require("../../db_connection");
 
         try {
-            const [posts] = await db.query(`
+            const posts = await db.query(`
             SELECT 
                 p.*, IFNULL(JSON_ARRAYAGG(pl.user_id),JSON_ARRAY()) AS likedByUsers
             FROM posts p
@@ -93,15 +93,15 @@ exports.postController = {
         const created_at = new Date(Number(createdAt))
 
         try {
-            const [result] = await db.query(
+            const result = await db.query(
                 `INSERT INTO posts (user_id, title, description, media_type, media_url, created_at)
-                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
                 [user_id, title, description,
                     mediaType, mediaUrl, created_at])
 
             res.status(201).json({
                 success: true,
-                postid: result.insertId
+                postid: result.rows[0].id
             })
         }
         catch (err) {
@@ -111,9 +111,6 @@ exports.postController = {
                 success: false,
                 error: err.message
             })
-        }
-        finally {
-
         }
     },
     async updatePost(req, res) {
@@ -132,7 +129,7 @@ exports.postController = {
             created_at
         } = req.body;
         try {
-            const [result] = await db.query(
+            const result = await db.query(
                 `UPDATE posts
                 SET title = $1, description = $2, media_type = $3, media_url = $4
                 WHERE id = $5`,
@@ -165,7 +162,7 @@ exports.postController = {
         const { postid } = req.params;
 
         try {
-            const [result] = await db.query(
+            const result = await db.query(
                 "DELETE FROM posts WHERE id = ?",
                 [postid]
             );
