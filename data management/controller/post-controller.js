@@ -115,19 +115,28 @@ exports.postController = {
         const db = require("../../db_connection");
         const cloudinary = require("cloudinary").v2;
 
+        const { postid } = req.params;
+
         const {
-            id,
             title,
             description,
-            media_type: newMediaType,
-            media_url: newMediaUrl
+            media_type,
+            media_url
         } = req.body;
+
+        console.log({
+            title,
+            description,
+            media_type,
+            media_url,
+            postid
+        });
 
         try {
             // 1. get current post
             const current = await db.query(
                 `SELECT media_url FROM posts WHERE id = $1`,
-                [id]
+                [postid]
             );
 
             if (current.rows.length === 0) {
@@ -140,18 +149,31 @@ exports.postController = {
             const oldMediaUrl = current.rows[0].media_url;
 
             const hadMediaBefore = !!oldMediaUrl;
-            const hasMediaNow = !!newMediaUrl;
+            const hasMediaNow = !!media_url;
 
             // helper: extract cloudinary public_id
             const extractPublicId = (url) => {
-                if (!url) return null;
+                try {
+                    if (!url) return null;
 
-                const parts = url.split("/upload/");
-                if (parts.length < 2) return null;
+                    const parts = url.split("/upload/");
+                    if (parts.length < 2) return null;
 
-                let path = parts[1];
-                path = path.replace(/^v\d+\//, "");
-                return path.split(".")[0];
+                    let path = parts[1];
+
+                    // remove version if exists
+                    path = path.replace(/^v\d+\//, "");
+
+                    // remove query strings if any
+                    path = path.split("?")[0];
+
+                    // remove file extension
+                    const lastDot = path.lastIndexOf(".");
+                    return lastDot !== -1 ? path.substring(0, lastDot) : path;
+                } catch (err) {
+                    console.error("extractPublicId failed:", err);
+                    return null;
+                }
             };
 
             // =========================
@@ -164,21 +186,28 @@ exports.postController = {
 
                 if (publicId) {
                     await cloudinary.uploader.destroy(publicId, {
-                        resource_type: "auto"
+                        resource_type: media_type
                     });
                 }
             }
 
             // Case 2: replaced media
-            if (hadMediaBefore && hasMediaNow && oldMediaUrl !== newMediaUrl) {
+            if (hadMediaBefore && hasMediaNow && oldMediaUrl !== media_url) {
                 const publicId = extractPublicId(oldMediaUrl);
 
                 if (publicId) {
-                    await cloudinary.uploader.destroy(publicId, {
-                        resource_type: "auto"
-                    });
+                    try {
+                        await cloudinary.uploader.destroy(publicId, {
+                            resource_type: media_type
+                        });
+                    } catch (err) {
+                        console.error("Cloudinary delete failed:", err.message);
+                    }
                 }
+                console.log("OLD URL:", oldMediaUrl);
+                console.log("PUBLIC ID:", publicId);
             }
+
 
             // =========================
             // UPDATE DB ONLY
@@ -186,24 +215,24 @@ exports.postController = {
 
             await db.query(
                 `UPDATE posts
-             SET title = $1,
-                 description = $2,
-                 media_type = $3,
-                 media_url = $4
-             WHERE id = $5`,
+                SET title = $1,
+                description = $2,
+                media_type = $3,
+                media_url = $4
+                WHERE id = $5`,
                 [
                     title,
                     description,
-                    hasMediaNow ? newMediaType : null,
-                    hasMediaNow ? newMediaUrl : null,
-                    id
+                    hasMediaNow ? media_type : null,
+                    hasMediaNow ? media_url : null,
+                    postid
                 ]
             );
 
             return res.status(200).json({
                 success: true,
                 mediaDeleted: hadMediaBefore && !hasMediaNow,
-                mediaReplaced: hadMediaBefore && hasMediaNow && oldMediaUrl !== newMediaUrl,
+                mediaReplaced: hadMediaBefore && hasMediaNow && oldMediaUrl !== media_url,
                 mediaAdded: !hadMediaBefore && hasMediaNow
             });
 
