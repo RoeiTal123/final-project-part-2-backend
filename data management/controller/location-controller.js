@@ -1,200 +1,292 @@
 const { dbConnection } = require("../../db_connection")
+const cloudinary = require("../../cloudinary");
 
 exports.locationController = {
     async getLocations(req, res) {
-        const dbConnection = require("../../db_connection")
-        const connection = await dbConnection.createConnection()
+        const db = require("../../db_connection");
 
-        const filter = req.query.sort
-        console.log("filter =", req.query.sort);
-
-        let whereClause = "";
-        let orderBy = "l.created_at DESC";
-
-        switch (filter) {
-            case "old":
-                orderBy = "l.created_at ASC";
-                break;
-
-            case "new":
-                orderBy = "l.created_at DESC";
-                break;
-
-            case "day":
-                whereClause = "WHERE l.created_at >= NOW() - INTERVAL 1 DAY";
-                break;
-
-            case "week":
-                whereClause = "WHERE l.created_at >= NOW() - INTERVAL 7 DAY";
-                break;
-
-            case "month":
-                whereClause = "WHERE l.created_at >= NOW() - INTERVAL 1 MONTH";
-                break;
-        }
-
+        const user_id = req.query.user_id
+        let locations
         try {
-            const [locations] = await connection.execute(`
-            SELECT 
-            l.*,
-            IFNULL(JSON_ARRAYAGG(lf.user_id), JSON_ARRAY()) AS Feeders
-            FROM locations p
-            LEFT JOIN location_feeders lf 
-            ON l.id = lf.location_id
-            ${whereClause}
-            GROUP BY l.id
-            ORDER BY ${orderBy}
-            `);
-            res.json(locations)
-        }
-        catch (err) {
-            console.error(err)
-            res.status(500).json({ error: err.message })
-        }
-        finally {
-            connection.end()
+            if (user_id) {
+                locations = await db.query(
+                    `SELECT *
+                    FROM locations
+                    WHERE $1 = ANY(feeders)
+                    ORDER BY created_at DESC
+                    `,
+                    [user_id]
+                );
+            } else {
+                locations = await db.query(
+                    `SELECT *
+                    FROM locations
+                    ORDER BY created_at DESC
+                    `
+                );
+            }
+
+            res.json(locations.rows);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err.message });
         }
     },
     async getLocation(req, res) {
         const locationid = req.params.locationid
-        const dbConnection = require("../../db_connection")
-        const connection = await dbConnection.createConnection()
+        const db = require("../../db_connection");
 
         try {
-            const [locations] = await connection.execute(`
-            SELECT 
-                l.*, IFNULL(JSON_ARRAYAGG(pl.user_id),JSON_ARRAY()) AS likedByUsers
-            FROM locations p
-            LEFT JOIN location_likes pl 
-                ON l.id = pl.location_id
-            WHERE l.id = ?
-            GROUP BY l.id
-        `, [locationid])
-
-            res.json(locations[0])
-        }
-        catch (err) {
-            console.error(err)
-            res.status(500).json({ error: err.message })
-        }
-        finally {
-            connection.end()
-        }
-    },
-    async addLocation(req, res) {
-        const dbConnection = require("../../db_connection")
-        const connection = await dbConnection.createConnection()
-
-        console.log("PUT /locations HIT");
-        console.log(req.body);
-
-        const { user_id, title, description,
-            mediaType, mediaUrl, createdAt } = req.body
-
-        const created_at = new Date(Number(createdAt))
-
-        try {
-            const [result] = await connection.execute(
-                `INSERT INTO locations (user_id, title, description, media_type, media_url, created_at)
-                 VALUES ( ?, ?, ?, ?, ?,  ?)`,
-                [user_id, title, description,
-                    mediaType, mediaUrl, created_at])
-
-            res.status(201).json({
-                success: true,
-                locationid: result.insertId
-            })
-        }
-        catch (err) {
-            console.error(err)
-
-            res.status(500).json({
-                success: false,
-                error: err.message
-            })
-        }
-        finally {
-            connection.end()
-        }
-    },
-    async updateLocation(req, res) {
-        const dbConnection = require("../../db_connection")
-        const connection = await dbConnection.createConnection()
-
-        console.log("PUT /locations HIT");
-        console.log(req.body);
-
-        const {
-            id,
-            user_id,
-            title,
-            description,
-            media_type,
-            media_url,
-            created_at
-        } = req.body;
-        try {
-            const [result] = await connection.execute(
-                `UPDATE locations
-                SET title = ?, description = ?, media_type = ?, media_url = ?
-                WHERE id = ?`,
-                [title, description, media_type, media_url, id]
-            );
-
-            res.status(201).json({
-                success: true,
-                locationid: result.insertId
-            })
-        }
-        catch (err) {
-            console.error(err)
-
-            res.status(500).json({
-                success: false,
-                error: err.message
-            })
-        }
-        finally {
-            connection.end()
-        }
-    },
-    async deleteLocation(req, res) {
-        const dbConnection = require("../../db_connection")
-        const connection = await dbConnection.createConnection()
-
-        console.log("DELETE /locations HIT");
-        console.log("PARAMS:", req.params);
-
-        const { locationid } = req.params;
-
-        try {
-            const [result] = await connection.execute(
-                "DELETE FROM locations WHERE id = ?",
+            const result = await db.query(
+                `
+            SELECT *
+            FROM locations
+            WHERE id = $1
+            `,
                 [locationid]
             );
 
-            if (result.affectedRows === 0) {
+            const location = result.rows[0];
+
+            if (!location) {
+                return res.status(404).json({
+                    error: "Location not found"
+                });
+            }
+
+            res.json(location);
+        }
+        catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err.message });
+        }
+    },
+    async addLocation(req, res) {
+        const db = require("../../db_connection");
+
+        const { location_name, description, lat, lng,
+             media_url, owner_id,  feeders, media_type, created_at} = req.body
+
+        const created_at1 = new Date(Number(created_at))
+
+        try {
+            const result = await db.query(
+                `INSERT INTO locations ( location_name, lat, lng, description,
+                                         location_media_url, media_type, owner_id,
+                                         feeders, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                [location_name, lat, lng, description, media_url, media_type,
+                owner_id, feeders, created_at1])
+
+            res.status(201).json({
+                success: true,
+                locationid: result.rows[0].id
+            })
+        }
+        catch (err) {
+            console.error(err)
+
+            res.status(500).json({
+                success: false,
+                error: err.message
+            })
+        }
+    },
+    async updateLocation(req, res) {
+        const db = require("../../db_connection");
+        const cloudinary = require("cloudinary").v2;
+
+        const { locationid } = req.params;
+
+        const {
+            name,
+            description,
+            media_type,
+            media_url
+        } = req.body;
+
+        console.log({
+            name,
+            description,
+            media_type,
+            media_url,
+            locationid
+        });
+
+        try {
+            // 1. get current location
+            const current = await db.query(
+                `SELECT media_url FROM locations WHERE id = $1`,
+                [locationid]
+            );
+
+            if (current.rows.length === 0) {
                 return res.status(404).json({
                     success: false,
                     message: "Location not found"
                 });
             }
 
-            res.json({
+            const oldMediaUrl = current.rows[0].media_url;
+
+            const hadMediaBefore = !!oldMediaUrl;
+            const hasMediaNow = !!media_url;
+
+            // helper: extract cloudinary public_id
+            const extractPublicId = (url) => {
+                try {
+                    if (!url) return null;
+
+                    const parts = url.split("/upload/");
+                    if (parts.length < 2) return null;
+
+                    let path = parts[1];
+
+                    // remove version if exists
+                    path = path.replace(/^v\d+\//, "");
+
+                    // remove query strings if any
+                    path = path.split("?")[0];
+
+                    // remove file extension
+                    const lastDot = path.lastIndexOf(".");
+                    return lastDot !== -1 ? path.substring(0, lastDot) : path;
+                } catch (err) {
+                    console.error("extractPublicId failed:", err);
+                    return null;
+                }
+            };
+
+            // =========================
+            // DELETE OLD MEDIA IF NEEDED
+            // =========================
+
+            // Case 1: removed media
+            if (hadMediaBefore && !hasMediaNow) {
+                const publicId = extractPublicId(oldMediaUrl);
+
+                if (publicId) {
+                    await cloudinary.uploader.destroy(publicId, {
+                        resource_type: media_type
+                    });
+                }
+            }
+
+            // Case 2: replaced media
+            if (hadMediaBefore && hasMediaNow && oldMediaUrl !== media_url) {
+                const publicId = extractPublicId(oldMediaUrl);
+
+                if (publicId) {
+                    try {
+                        await cloudinary.uploader.destroy(publicId, {
+                            resource_type: media_type
+                        });
+                    } catch (err) {
+                        console.error("Cloudinary delete failed:", err.message);
+                    }
+                }
+                console.log("OLD URL:", oldMediaUrl);
+                console.log("PUBLIC ID:", publicId);
+            }
+
+
+            // =========================
+            // UPDATE DB ONLY
+            // =========================
+
+            await db.query(
+                `UPDATE locations
+                SET location_name = $1,
+                description = $2,
+                media_type = $3,
+                media_url = $4
+                WHERE id = $5`,
+                [
+                    name,
+                    description,
+                    hasMediaNow ? media_type : null,
+                    hasMediaNow ? media_url : null,
+                    locationid
+                ]
+            );
+
+            return res.status(200).json({
                 success: true,
-                deletedId: locationid
+                mediaDeleted: hadMediaBefore && !hasMediaNow,
+                mediaReplaced: hadMediaBefore && hasMediaNow && oldMediaUrl !== media_url,
+                mediaAdded: !hadMediaBefore && hasMediaNow
             });
-        }
-        catch (err) {
+
+        } catch (err) {
             console.error(err);
 
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 error: err.message
             });
         }
-        finally {
-            connection.end();
+    },
+    async deleteLocation(req, res) {
+        const db = require("../../db_connection");
+
+        const { locationid } = req.params;
+
+        try {
+            const locations = await db.query(
+                "SELECT media_url FROM locations WHERE id = $1",
+                [locationid]
+            );
+
+            const location = locations.rows[0]
+
+            const mediaUrl = location.mediaUrl || location.media_url;
+
+            const extractPublicId = (url) => {
+                if (!url) return null;
+
+                const parts = url.split("/upload/");
+                if (parts.length < 2) return null;
+
+                let path = parts[1];
+                path = path.replace(/^v\d+\//, "");
+                return path.split(".")[0];
+            };
+
+            const publicId = extractPublicId(mediaUrl);
+
+            const getResourceType = (url) => {
+                if (!url) return null;
+                if (url.includes("/video/")) return "video";
+                return "image";
+            };
+
+            const resourceType = getResourceType(mediaUrl);
+
+            // delete media first
+            if (publicId && resourceType) {
+                await cloudinary.uploader.destroy(publicId, {
+                    resource_type: resourceType
+                });
+            }
+
+            // then delete location
+            await db.query(
+                "DELETE FROM locations WHERE id = $1",
+                [locationid]
+            );
+
+            return res.json({
+                success: true,
+                deletedLocation: true,
+                deletedMedia: !!publicId
+            });
+
+        } catch (err) {
+            console.error(err);
+
+            return res.status(500).json({
+                success: false,
+                error: err.message
+            });
         }
     }
 }
