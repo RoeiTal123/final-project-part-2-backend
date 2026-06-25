@@ -98,14 +98,14 @@ exports.locationController = {
         const { locationid } = req.params;
 
         const {
-            name,
+            location_name,
             description,
             media_type,
             media_url
         } = req.body;
 
         console.log({
-            name,
+            location_name,
             description,
             media_type,
             media_url,
@@ -115,7 +115,7 @@ exports.locationController = {
         try {
             // 1. get current location
             const current = await db.query(
-                `SELECT media_url FROM locations WHERE id = $1`,
+                `SELECT location_media_url FROM locations WHERE id = $1`,
                 [locationid]
             );
 
@@ -198,10 +198,10 @@ exports.locationController = {
                 SET location_name = $1,
                 description = $2,
                 media_type = $3,
-                media_url = $4
+                location_media_url = $4
                 WHERE id = $5`,
                 [
-                    name,
+                    location_name,
                     description,
                     hasMediaNow ? media_type : null,
                     hasMediaNow ? media_url : null,
