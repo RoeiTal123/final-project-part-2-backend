@@ -232,7 +232,7 @@ exports.locationController = {
 
         try {
             const locations = await db.query(
-                "SELECT media_url FROM locations WHERE id = $1",
+                "SELECT location_media_url FROM locations WHERE id = $1",
                 [locationid]
             );
 
