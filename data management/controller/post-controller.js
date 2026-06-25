@@ -124,14 +124,6 @@ exports.postController = {
             media_url
         } = req.body;
 
-        console.log({
-            title,
-            description,
-            media_type,
-            media_url,
-            postid
-        });
-
         try {
             // 1. get current post
             const current = await db.query(

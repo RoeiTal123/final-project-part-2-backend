@@ -104,16 +104,7 @@ exports.locationController = {
             media_url
         } = req.body;
 
-        console.log({
-            location_name,
-            description,
-            media_type,
-            media_url,
-            locationid
-        });
-
         try {
-            // 1. get current location
             const current = await db.query(
                 `SELECT location_media_url FROM locations WHERE id = $1`,
                 [locationid]
@@ -131,7 +122,6 @@ exports.locationController = {
             const hadMediaBefore = !!oldMediaUrl;
             const hasMediaNow = !!media_url;
 
-            // helper: extract cloudinary public_id
             const extractPublicId = (url) => {
                 try {
                     if (!url) return null;
@@ -141,10 +131,8 @@ exports.locationController = {
 
                     let path = parts[1];
 
-                    // remove version if exists
                     path = path.replace(/^v\d+\//, "");
 
-                    // remove query strings if any
                     path = path.split("?")[0];
 
                     // remove file extension

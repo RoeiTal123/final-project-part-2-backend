@@ -11,11 +11,11 @@ const { userRouter } = require("./data management/router/user-router.js")
 const { locationRouter } = require("./data management/router/location-router.js")
 
 process.on("uncaughtException", (err) => {
-    console.error("🔥 UNCAUGHT:", err);
+    console.error("UNCAUGHT: ", err);
 });
 
 process.on("unhandledRejection", (err) => {
-    console.error("🔥 UNHANDLED:", err);
+    console.error("UNHANDLED: ", err);
 });
 
 app.use(express.json())
