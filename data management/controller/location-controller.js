@@ -65,7 +65,7 @@ exports.locationController = {
         const db = require("../../db_connection");
 
         const { location_name, description, lat, lng,
-             media_url, owner_id,  feeders, media_type, created_at} = req.body
+             location_media_url, owner_id,  feeders, media_type, created_at} = req.body
 
         const created_at1 = new Date(Number(created_at))
 
@@ -74,7 +74,7 @@ exports.locationController = {
                 `INSERT INTO locations ( location_name, lat, lng, description,
                                          location_media_url, media_type, owner_id,
                                          feeders, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-                [location_name, lat, lng, description, media_url, media_type,
+                [location_name, lat, lng, description, location_media_url, media_type,
                 owner_id, feeders, created_at1])
 
             res.status(201).json({
@@ -101,7 +101,7 @@ exports.locationController = {
             location_name,
             description,
             media_type,
-            media_url
+            location_media_url
         } = req.body;
 
         try {
@@ -117,10 +117,10 @@ exports.locationController = {
                 });
             }
 
-            const oldMediaUrl = current.rows[0].media_url;
+            const oldMediaUrl = current.rows[0].location_media_url;
 
             const hadMediaBefore = !!oldMediaUrl;
-            const hasMediaNow = !!media_url;
+            const hasMediaNow = !!location_media_url;
 
             const extractPublicId = (url) => {
                 try {
@@ -160,7 +160,7 @@ exports.locationController = {
             }
 
             // Case 2: replaced media
-            if (hadMediaBefore && hasMediaNow && oldMediaUrl !== media_url) {
+            if (hadMediaBefore && hasMediaNow && oldMediaUrl !== location_media_url) {
                 const publicId = extractPublicId(oldMediaUrl);
 
                 if (publicId) {
@@ -192,7 +192,7 @@ exports.locationController = {
                     location_name,
                     description,
                     hasMediaNow ? media_type : null,
-                    hasMediaNow ? media_url : null,
+                    hasMediaNow ? location_media_url : null,
                     locationid
                 ]
             );
@@ -200,7 +200,7 @@ exports.locationController = {
             return res.status(200).json({
                 success: true,
                 mediaDeleted: hadMediaBefore && !hasMediaNow,
-                mediaReplaced: hadMediaBefore && hasMediaNow && oldMediaUrl !== media_url,
+                mediaReplaced: hadMediaBefore && hasMediaNow && oldMediaUrl !== location_media_url,
                 mediaAdded: !hadMediaBefore && hasMediaNow
             });
 
@@ -226,7 +226,7 @@ exports.locationController = {
 
             const location = locations.rows[0]
 
-            const mediaUrl = location.mediaUrl || location.media_url;
+            const mediaUrl = location.location_mediaUrl;
 
             const extractPublicId = (url) => {
                 if (!url) return null;
@@ -241,18 +241,10 @@ exports.locationController = {
 
             const publicId = extractPublicId(mediaUrl);
 
-            const getResourceType = (url) => {
-                if (!url) return null;
-                if (url.includes("/video/")) return "video";
-                return "image";
-            };
-
-            const resourceType = getResourceType(mediaUrl);
-
             // delete media first
-            if (publicId && resourceType) {
+            if (publicId) {
                 await cloudinary.uploader.destroy(publicId, {
-                    resource_type: resourceType
+                    resource_type: location.media_type
                 });
             }
 

@@ -250,7 +250,7 @@ exports.postController = {
 
             const post = posts.rows[0]
 
-            const mediaUrl = post.mediaUrl || post.media_url;
+            const mediaUrl = post.media_url;
 
             const extractPublicId = (url) => {
                 if (!url) return null;
@@ -265,18 +265,10 @@ exports.postController = {
 
             const publicId = extractPublicId(mediaUrl);
 
-            const getResourceType = (url) => {
-                if (!url) return null;
-                if (url.includes("/video/")) return "video";
-                return "image";
-            };
-
-            const resourceType = getResourceType(mediaUrl);
-
             // delete media first
-            if (publicId && resourceType) {
+            if (publicId) {
                 await cloudinary.uploader.destroy(publicId, {
-                    resource_type: resourceType
+                    resource_type: post.media_type
                 });
             }
 
