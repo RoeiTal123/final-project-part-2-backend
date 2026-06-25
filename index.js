@@ -21,18 +21,17 @@ process.on("unhandledRejection", (err) => {
 app.use(express.json())
 
 app.use(cors({
-origin: [
-  "http://localhost:5173",
-  "http://127.0.0.1:5500",
-  "http://localhost:5500"
-],
-    credentials: true
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "https://final-project-part-2-frontend.onrender.com"
+  ],
+  credentials: true
 }));
 
 app.use("/api/posts", postRouter)
 app.use("/api/users", userRouter)
 app.use("/api/locations", locationRouter)
 
-app.listen(3000,() => {
-    console.log("server running on 3000")
-})
+app.listen(process.env.PORT || 3000);

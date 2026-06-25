@@ -67,7 +67,7 @@ exports.locationController = {
         const { location_name, description, lat, lng,
              location_media_url, owner_id,  feeders, media_type, created_at} = req.body
 
-        const created_at1 = new Date(Number(created_at))
+        const created_at1 = created_at ? new Date(created_at) : new Date();
 
         try {
             const result = await db.query(
