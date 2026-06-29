@@ -27,14 +27,21 @@ exports.userController = {
 
   async addUser(req, res) {
 
-    const { username, password, fullname, email, profile_pic_url, user_type } = req.body;
+    const { username, password, fullname, email, birthday, profile_pic_url, user_type } = req.body;
+
+    if (!birthday) {
+      return res.status(400).json({
+        success: false,
+        error: "Birthday is required."
+      });
+    }
 
     try {
       const result = await db.query(
-        `INSERT INTO users (username, password, fullname, email, profile_pic_url, user_type) 
-         VALUES ($1, $2, $3, $4, $5, $6) 
+        `INSERT INTO users (username, password, fullname, email, birthday, profile_pic_url, user_type) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7) 
          RETURNING id`,
-        [username, password, fullname, email, profile_pic_url, user_type || 'user']
+        [username, password, fullname, email, birthday, profile_pic_url, user_type || 'user']
       );
 
       const newUserId = result.rows[0].id;
