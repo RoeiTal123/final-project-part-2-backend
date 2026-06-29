@@ -272,6 +272,12 @@ exports.postController = {
                 });
             }
 
+            // delete all likes for this post
+            await db.query(
+                "DELETE FROM post_likes WHERE post_id = $1",
+                [postid]
+            );
+
             // then delete post
             await db.query(
                 "DELETE FROM posts WHERE id = $1",
